@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,10 +12,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/willfreit4s/short_link/internal/handler"
 	"github.com/willfreit4s/short_link/internal/usecase"
+	"github.com/willfreit4s/short_link/pkg/logger"
 )
 
 func main() {
-	router := gin.Default()
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	router := gin.New()
+	router.Use(logger.RequestIDMiddleware())
+	router.Use(logger.SlogMiddleware(log))
+	router.Use(gin.Recovery())
 
 	shortLinkHandler := handler.NewShortLinkHandler(usecase.NewShortLinkUseCase())
 
@@ -33,19 +39,19 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			log.Error("listen", "err", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	log.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Println("Server Shutdown:", err)
+		log.Error("Server Shutdown", "err", err)
 	}
-	log.Println("Server exiting")
+	log.Info("Server exiting")
 }
