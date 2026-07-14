@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,13 +11,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/willfreit4s/short_link/configs"
 	"github.com/willfreit4s/short_link/internal/handler"
 	"github.com/willfreit4s/short_link/internal/usecase"
 	"github.com/willfreit4s/short_link/pkg/logger"
 )
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	cfg := configs.LoadConfig()
+
+	log := initLogger(cfg)
 
 	router := gin.New()
 	router.Use(logger.RequestIDMiddleware())
@@ -33,7 +37,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
 		Handler: router,
 	}
 
@@ -54,4 +58,17 @@ func main() {
 		log.Error("Server Shutdown", "err", err)
 	}
 	log.Info("Server exiting")
+}
+
+func initLogger(cfg *configs.Config) *slog.Logger {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	log.Info(
+		"Starting application",
+		"service_name", cfg.ServiceName,
+		"environment", cfg.Environment,
+		"server_port", cfg.ServerPort,
+	)
+
+	return log
 }
