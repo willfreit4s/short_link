@@ -21,6 +21,7 @@ type config struct {
 	// Server configuration
 	ServerPort  int
 	ServiceName string
+	Environment string
 }
 
 type Config = config
@@ -39,6 +40,7 @@ func LoadConfig() *config {
 	v.SetDefault("MIN_CONN", 10)
 	v.SetDefault("SERVER_PORT", 8080)
 	v.SetDefault("SERVICE_NAME", "short_link_service")
+	v.SetDefault("ENVIRONMENT", "local")
 
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -56,6 +58,7 @@ func LoadConfig() *config {
 		MinConn:     v.GetInt("MIN_CONN"),
 		ServerPort:  v.GetInt("SERVER_PORT"),
 		ServiceName: v.GetString("SERVICE_NAME"),
+		Environment: v.GetString("ENVIRONMENT"),
 	}
 
 	return config
