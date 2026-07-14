@@ -8,11 +8,11 @@ import (
 	"github.com/jaevor/go-nanoid"
 )
 
-const IDLength = 12
+const IDLength = 10
 const Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-"
 
 var generateNanoID func() string
-var idRegex = regexp.MustCompile(`^[0-9A-Za-z_-]{12}$`)
+var idRegex = regexp.MustCompile(`^[0-9A-Za-z_-]{10}$`)
 
 var ErrInvalidID = errors.New("identifier with an invalid format or size")
 
