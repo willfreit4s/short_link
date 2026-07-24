@@ -1,0 +1,18 @@
+name: short_link
+
+services:
+  db:
+    image: postgres:18.1
+    container_name: short_link-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=short_link
+    volumes:
+      - db_data:/var/lib/postgresql
+
+volumes:
+  db_data:
