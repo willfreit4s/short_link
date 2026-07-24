@@ -11,5 +11,9 @@ migDOWN:
 sqlc:
 	sqlc generate
 
+# Run the application
+run:
+	go run cmd/server/main.go
+
 
 .PHONY: migUP migDOWN sqlc
