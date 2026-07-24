@@ -34,7 +34,7 @@ func LoadConfig() *config {
 	v.SetDefault("DB_HOST", "localhost")
 	v.SetDefault("DB_PORT", "5432")
 	v.SetDefault("DB_USER", "postgres")
-	v.SetDefault("DB_PASS", "root")
+	v.SetDefault("DB_PASS", "postgres")
 	v.SetDefault("DB_NAME", "short_link")
 	v.SetDefault("MAX_CONN", 30)
 	v.SetDefault("MIN_CONN", 10)
