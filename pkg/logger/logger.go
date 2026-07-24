@@ -67,11 +67,3 @@ func FromContext(ctx context.Context) *slog.Logger {
 
 	return slog.Default()
 }
-
-func GetLogger(c *gin.Context) *slog.Logger {
-	if c == nil {
-		return slog.Default()
-	}
-
-	return FromContext(c.Request.Context())
-}
