@@ -5,15 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	db "github.com/willfreit4s/short_link/internal/db"
 	"github.com/willfreit4s/short_link/internal/handler"
+	repositorypostgres "github.com/willfreit4s/short_link/internal/repository/postgres"
 	"github.com/willfreit4s/short_link/internal/usecase"
 	"github.com/willfreit4s/short_link/pkg/logger"
 )
 
 func NewRouter(log *slog.Logger, conn *pgxpool.Pool) *gin.Engine {
-	queries := db.New(conn)
-	shortLinkUseCase := usecase.NewShortLinkUseCase(queries)
+	shortLinkRepository := repositorypostgres.NewShortLinkRepository(conn)
+	transactionManager := repositorypostgres.NewTransactionManager(conn)
+	shortLinkUseCase := usecase.NewShortLinkUseCase(shortLinkRepository, transactionManager)
 	shortLinkHandler := handler.NewShortLinkHandler(shortLinkUseCase)
 
 	router := gin.New()
