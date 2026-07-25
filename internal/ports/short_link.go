@@ -3,10 +3,10 @@ package ports
 import (
 	"context"
 
-	db "github.com/willfreit4s/short_link/internal/db"
+	"github.com/willfreit4s/short_link/internal/entity"
 )
 
 type ShortLinkRepository interface {
-	CreateShortLink(ctx context.Context, arg db.CreateShortLinkParams) (db.Link, error)
-	GetShortLink(ctx context.Context, id string) (db.Link, error)
+	CreateShortLink(ctx context.Context, shortLink *entity.ShortLink) (*entity.ShortLink, error)
+	GetShortLink(ctx context.Context, id string) (*entity.ShortLink, error)
 }
