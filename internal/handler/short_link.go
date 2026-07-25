@@ -2,59 +2,81 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/willfreit4s/short_link/internal/usecase"
+	usecasedto "github.com/willfreit4s/short_link/internal/usecase/dto"
 )
 
-type ShortLinkHandler struct {
-	usecase *usecase.ShortLinkUseCase
+type ShortLinkResponse struct {
+	ShortURL string `json:"short_url"`
 }
 
-func NewShortLinkHandler(usecase *usecase.ShortLinkUseCase) *ShortLinkHandler {
+type ShortLinkRequest struct {
+	URL string `json:"url"`
+}
+
+type ShortLinkHandler struct {
+	usecase usecase.ShortLinkUseCase
+}
+
+func NewShortLinkHandler(usecase usecase.ShortLinkUseCase) *ShortLinkHandler {
 	return &ShortLinkHandler{
 		usecase: usecase,
 	}
 }
 
 func (h *ShortLinkHandler) CreateShortLink(c *gin.Context) {
-	var req struct {
-		URL string `json:"url"`
-	}
+	var req ShortLinkRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"error":   "Invalid request payload",
+			"message": err.Error(),
 		})
 		return
 	}
 
-	shortLink, err := h.usecase.CreateShortLink(c.Request.Context(), req.URL)
+	input := usecasedto.CreateShortLinkInput{
+		OriginalURL: req.URL,
+	}
+
+	shortLink, err := h.usecase.CreateShortLink(c.Request.Context(), input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"error":   "Failed to create short link",
+			"message": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"id":        shortLink.ID,
-		"short_url": fmt.Sprintf("%s/%s", "http://localhost:8080", shortLink.ID),
-	})
+	shortLinkResponse := ShortLinkResponse{
+		ShortURL: fmt.Sprintf("%s://%s/r/%s", "https", c.Request.Host, shortLink.Hash),
+	}
+
+	c.JSON(http.StatusCreated, shortLinkResponse)
 }
 
 func (h *ShortLinkHandler) GetShortLink(c *gin.Context) {
 	hash := c.Param("hash")
 
-	originalURL, err := h.usecase.GetShortLink(c.Request.Context(), hash)
+	shortLink, err := h.usecase.GetShortLink(c.Request.Context(), usecasedto.GetShortLinkInput{Hash: hash})
 	if err != nil {
+		if errors.Is(err, usecase.ErrShortLinkNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "short link not found",
+			})
+			return
+		}
+
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	c.Redirect(http.StatusFound, originalURL)
+	c.Redirect(http.StatusFound, shortLink.OriginalURL)
 }
