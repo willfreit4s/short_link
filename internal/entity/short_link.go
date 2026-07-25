@@ -3,6 +3,7 @@ package entity
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/willfreit4s/short_link/pkg/entity"
@@ -22,7 +23,7 @@ type ShortLink struct {
 func NewShortLink(originalURL string) (*ShortLink, error) {
 	shortLink := &ShortLink{
 		ID:          entity.NewNanoID(),
-		OriginalURL: originalURL,
+		OriginalURL: normalizeOriginalURL(originalURL),
 		CreatedAt:   time.Now(),
 	}
 
@@ -41,4 +42,18 @@ func (s *ShortLink) Validate() error {
 		return ErrOriginalURLIsRequired
 	}
 	return nil
+}
+
+func normalizeOriginalURL(originalURL string) string {
+	originalURL = strings.TrimSpace(originalURL)
+
+	if originalURL == "" {
+		return originalURL
+	}
+
+	if strings.HasPrefix(originalURL, "http://") || strings.HasPrefix(originalURL, "https://") {
+		return originalURL
+	}
+
+	return "https://" + originalURL
 }
