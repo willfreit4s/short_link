@@ -19,14 +19,14 @@ type ShortLinkUseCase interface {
 }
 
 type shortLinkUseCase struct {
-	repository         ports.ShortLinkRepository
-	transactionManager ports.TransactionManager
+	repository ports.ShortLinkRepository
+	cache      ports.ShortLinkCache
 }
 
-func NewShortLinkUseCase(repository ports.ShortLinkRepository, transactionManager ports.TransactionManager) ShortLinkUseCase {
+func NewShortLinkUseCase(repository ports.ShortLinkRepository, cache ports.ShortLinkCache) ShortLinkUseCase {
 	return &shortLinkUseCase{
-		repository:         repository,
-		transactionManager: transactionManager,
+		repository: repository,
+		cache:      cache,
 	}
 }
 
@@ -49,6 +49,10 @@ func (uc *shortLinkUseCase) CreateShortLink(ctx context.Context, input usecasedt
 		return usecasedto.CreateShortLinkOutput{}, errors.New("short link repository returned nil short link")
 	}
 
+	if err := uc.cache.Set(ctx, createdShortLink.ID.String(), createdShortLink.OriginalURL); err != nil {
+		log.Error("failed to cache created short link", "error", err, "hash", createdShortLink.ID.String())
+	}
+
 	return usecasedto.CreateShortLinkOutput{
 		ID:          createdShortLink.ID.String(),
 		Hash:        createdShortLink.ID.String(),
@@ -59,6 +63,12 @@ func (uc *shortLinkUseCase) CreateShortLink(ctx context.Context, input usecasedt
 func (uc *shortLinkUseCase) GetShortLink(ctx context.Context, input usecasedto.GetShortLinkInput) (usecasedto.GetShortLinkOutput, error) {
 	log := logger.FromContext(ctx)
 
+	if cachedURL, found, err := uc.cache.Get(ctx, input.Hash); err != nil {
+		log.Error("failed to get short link from cache", "error", err, "hash", input.Hash)
+	} else if found {
+		return usecasedto.GetShortLinkOutput{OriginalURL: cachedURL}, nil
+	}
+
 	shortLink, err := uc.repository.GetShortLink(ctx, input.Hash)
 	if err != nil {
 		log.Error("failed to get short link from repository", "error", err)
@@ -67,6 +77,10 @@ func (uc *shortLinkUseCase) GetShortLink(ctx context.Context, input usecasedto.G
 	if shortLink == nil {
 		log.Error("short link not found", "hash", input.Hash)
 		return usecasedto.GetShortLinkOutput{}, ErrShortLinkNotFound
+	}
+
+	if err := uc.cache.Set(ctx, input.Hash, shortLink.OriginalURL); err != nil {
+		log.Error("failed to update short link cache after repository hit", "error", err, "hash", input.Hash)
 	}
 
 	return usecasedto.GetShortLinkOutput{OriginalURL: shortLink.OriginalURL}, nil
