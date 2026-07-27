@@ -3,6 +3,7 @@ package configs
 
 import (
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -17,6 +18,13 @@ type config struct {
 	DBName  string
 	MaxConn int
 	MinConn int
+
+	// Redis configuration
+	RedisHost string
+	RedisPort string
+	RedisPass string
+	RedisDB   int
+	RedisTTL  time.Duration
 
 	// Server configuration
 	ServerPort  int
@@ -38,6 +46,11 @@ func LoadConfig() *config {
 	v.SetDefault("DB_NAME", "short_link")
 	v.SetDefault("MAX_CONN", 30)
 	v.SetDefault("MIN_CONN", 10)
+	v.SetDefault("REDIS_HOST", "localhost")
+	v.SetDefault("REDIS_PORT", "6379")
+	v.SetDefault("REDIS_PASS", "wsbmrc8PH18AIjID")
+	v.SetDefault("REDIS_DB", 0)
+	v.SetDefault("REDIS_TTL", "24h")
 	v.SetDefault("SERVER_PORT", 8080)
 	v.SetDefault("SERVICE_NAME", "short_link_service")
 	v.SetDefault("ENVIRONMENT", "local")
@@ -56,6 +69,11 @@ func LoadConfig() *config {
 		DBName:      v.GetString("DB_NAME"),
 		MaxConn:     v.GetInt("MAX_CONN"),
 		MinConn:     v.GetInt("MIN_CONN"),
+		RedisHost:   v.GetString("REDIS_HOST"),
+		RedisPort:   v.GetString("REDIS_PORT"),
+		RedisPass:   v.GetString("REDIS_PASS"),
+		RedisDB:     v.GetInt("REDIS_DB"),
+		RedisTTL:    v.GetDuration("REDIS_TTL"),
 		ServerPort:  v.GetInt("SERVER_PORT"),
 		ServiceName: v.GetString("SERVICE_NAME"),
 		Environment: v.GetString("ENVIRONMENT"),
