@@ -30,7 +30,13 @@ func main() {
 	}
 	defer db.Close()
 
-	router := bootstrap.NewRouter(log, db)
+	redisConn, err := database.InitRedis(cfg, log)
+	if err != nil {
+		log.Error("redis init", "err", err)
+	}
+	defer redisConn.Close()
+
+	router := bootstrap.NewRouter(log, db, redisConn, cfg.RedisTTL)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
