@@ -13,6 +13,20 @@ services:
       - POSTGRES_DB=short_link
     volumes:
       - db_data:/var/lib/postgresql
+  
+  redis:
+    image: redis:8-alpine
+    container_name: short_link-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASS:-wsbmrc8PH18AIjID}
+    volumes:
+      - redis_data:/data
 
 volumes:
   db_data:
+  redis_data:
