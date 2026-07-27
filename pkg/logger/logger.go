@@ -52,6 +52,7 @@ func SlogMiddleware(logger *slog.Logger) gin.HandlerFunc {
 			slog.String("path", c.Request.URL.Path),
 			slog.Int("status", c.Writer.Status()),
 			slog.Duration("latency", time.Since(start)),
+			slog.String("agent", c.Request.UserAgent()),
 		)
 	}
 }
