@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/willfreit4s/short_link/configs"
 	"github.com/willfreit4s/short_link/internal/usecase"
 	usecasedto "github.com/willfreit4s/short_link/internal/usecase/dto"
 )
@@ -53,8 +54,15 @@ func (h *ShortLinkHandler) CreateShortLink(c *gin.Context) {
 		return
 	}
 
+	var httpOrHttps string = "http"
+	env := configs.Instance.GetEnv()
+
+	if env != "local" {
+		httpOrHttps = "https"
+	}
+
 	shortLinkResponse := ShortLinkResponse{
-		ShortURL: fmt.Sprintf("%s://%s/r/%s", "https", c.Request.Host, shortLink.Hash),
+		ShortURL: fmt.Sprintf("%s://%s/r/%s", httpOrHttps, c.Request.Host, shortLink.Hash),
 	}
 
 	c.JSON(http.StatusCreated, shortLinkResponse)
