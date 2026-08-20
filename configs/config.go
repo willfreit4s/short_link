@@ -34,6 +34,8 @@ type config struct {
 
 type Config = config
 
+var Instance *Config
+
 func LoadConfig() *config {
 	_ = godotenv.Load()
 
@@ -61,7 +63,7 @@ func LoadConfig() *config {
 	v.SetConfigFile(".env")
 	v.SetConfigType("env")
 
-	config := &Config{
+	Instance = &Config{
 		DBHost:      v.GetString("DB_HOST"),
 		DBPort:      v.GetString("DB_PORT"),
 		DBUser:      v.GetString("DB_USER"),
@@ -79,5 +81,9 @@ func LoadConfig() *config {
 		Environment: v.GetString("ENVIRONMENT"),
 	}
 
-	return config
+	return Instance
+}
+
+func (c *config) GetEnv() string {
+	return c.Environment
 }
