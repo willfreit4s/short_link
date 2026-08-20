@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -37,8 +36,6 @@ type Config = config
 var Instance *Config
 
 func LoadConfig() *config {
-	_ = godotenv.Load()
-
 	v := viper.New()
 
 	v.SetDefault("DB_HOST", "localhost")
@@ -57,11 +54,11 @@ func LoadConfig() *config {
 	v.SetDefault("SERVICE_NAME", "short_link_service")
 	v.SetDefault("ENVIRONMENT", "local")
 
-	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
 	v.SetConfigFile(".env")
 	v.SetConfigType("env")
+
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	Instance = &Config{
 		DBHost:      v.GetString("DB_HOST"),
