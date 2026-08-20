@@ -1,37 +1,6 @@
 name: short_link
 
 services:
-  api:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    container_name: short_link-api
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASS: postgres
-      DB_NAME: short_link
-      MAX_CONN: 30
-      MIN_CONN: 10
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASS: ${REDIS_PASS:-wsbmrc8PH18AIjID}
-      REDIS_DB: 0
-      REDIS_TTL: 24h
-      SERVER_PORT: 8080
-      SERVICE_NAME: short_link_service
-      ENVIRONMENT: docker
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-
   db:
     image: postgres:18.1
     container_name: short_link-db
@@ -78,6 +47,52 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+
+  migrate:
+    image: migrate/migrate:v4.18.3
+    container_name: short_link-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../sql/migrations:/migrations:ro
+    command:
+      - -path=/migrations
+      - -database=postgres://postgres:postgres@db:5432/short_link?sslmode=disable
+      - up
+
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: short_link-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: short_link
+      MAX_CONN: 30
+      MIN_CONN: 10
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASS: ${REDIS_PASS:-wsbmrc8PH18AIjID}
+      REDIS_DB: 0
+      REDIS_TTL: 24h
+      SERVER_PORT: 8080
+      SERVICE_NAME: short_link_service
+      ENVIRONMENT: docker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 
 volumes:
