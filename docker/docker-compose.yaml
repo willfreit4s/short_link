@@ -1,31 +1,84 @@
 name: short_link
 
 services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: short_link-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: short_link
+      MAX_CONN: 30
+      MIN_CONN: 10
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASS: ${REDIS_PASS:-wsbmrc8PH18AIjID}
+      REDIS_DB: 0
+      REDIS_TTL: 24h
+      SERVER_PORT: 8080
+      SERVICE_NAME: short_link_service
+      ENVIRONMENT: docker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+
   db:
     image: postgres:18.1
     container_name: short_link-db
-    restart: always
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=short_link
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: short_link
     volumes:
       - db_data:/var/lib/postgresql
-  
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d short_link
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
   redis:
     image: redis:8-alpine
     container_name: short_link-redis
-    restart: always
+    restart: unless-stopped
     ports:
       - "6379:6379"
-    command: >
-      redis-server
-      --appendonly yes
-      --requirepass ${REDIS_PASS:-wsbmrc8PH18AIjID}
+    environment:
+      REDIS_PASS: ${REDIS_PASS:-wsbmrc8PH18AIjID}
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASS:-wsbmrc8PH18AIjID}
     volumes:
       - redis_data:/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - redis-cli -a "$$REDIS_PASS" ping
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
 
 volumes:
   db_data:
