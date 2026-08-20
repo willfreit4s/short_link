@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,12 +12,13 @@ import (
 	"github.com/willfreit4s/short_link/configs"
 	"github.com/willfreit4s/short_link/internal/bootstrap"
 	"github.com/willfreit4s/short_link/pkg/database"
+	"github.com/willfreit4s/short_link/pkg/logger"
 )
 
 func main() {
 	cfg := configs.LoadConfig()
 
-	log, err := initLogger(cfg)
+	log, err := logger.InitLogger(cfg)
 	if err != nil {
 		panic(err)
 	}
@@ -60,17 +60,4 @@ func main() {
 		log.Error("Server Shutdown", "err", err)
 	}
 	log.Info("Server exiting")
-}
-
-func initLogger(cfg *configs.Config) (*slog.Logger, error) {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
-	log.Info(
-		"Starting application",
-		"service_name", cfg.ServiceName,
-		"environment", cfg.Environment,
-		"server_port", cfg.ServerPort,
-	)
-
-	return log, nil
 }

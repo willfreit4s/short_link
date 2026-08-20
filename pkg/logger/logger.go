@@ -4,9 +4,11 @@ package logger
 import (
 	"context"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/willfreit4s/short_link/configs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +16,19 @@ import (
 type contextKey struct{}
 
 const LoggerKey = "logger"
+
+func InitLogger(cfg *configs.Config) (*slog.Logger, error) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	log.Info(
+		"Starting application",
+		"service_name", cfg.ServiceName,
+		"environment", cfg.Environment,
+		"server_port", cfg.ServerPort,
+	)
+
+	return log, nil
+}
 
 func WithContext(ctx context.Context, logger *slog.Logger) context.Context {
 	return context.WithValue(ctx, contextKey{}, logger)
