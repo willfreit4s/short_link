@@ -31,6 +31,26 @@ docker-logs:
 docker-logs-api:
 	docker compose -f docker/docker-compose.yaml logs -f api
 
+# Kubernetes
+
+K8S_NAMESPACE=short-link
+KIND_CLUSTER=short-link
+
+k8s-create:
+	kind create cluster --config k8s/kind-config.yaml
+
+k8s-delete:
+	kind delete cluster --name $(KIND_CLUSTER)
+
+k8s-status:
+	kubectl get nodes
+
+k8s-pods:
+	kubectl get pods -n $(K8S_NAMESPACE)
+
+k8s-apply-namespace:
+	kubectl apply -f k8s/namespace.yaml
+
 .PHONY: \
 	migUP \
 	migDOWN \
@@ -41,4 +61,9 @@ docker-logs-api:
 	docker-down \
 	docker-down-v \
 	docker-logs \
-	docker-logs-api
+	docker-logs-api \
+	k8s-create \
+	k8s-delete \
+	k8s-status \
+	k8s-pods \
+	k8s-apply-namespace
