@@ -30,6 +30,12 @@ func NewShortLinkHandler(usecase usecase.ShortLinkUseCase) *ShortLinkHandler {
 	}
 }
 
+func (h *ShortLinkHandler) GetHealth(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": "ok",
+	})
+}
+
 func (h *ShortLinkHandler) CreateShortLink(c *gin.Context) {
 	var req ShortLinkRequest
 

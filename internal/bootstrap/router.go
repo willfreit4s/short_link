@@ -26,6 +26,7 @@ func NewRouter(log *slog.Logger, conn *pgxpool.Pool, redisConn *redisclient.Clie
 	router.Use(gin.Recovery())
 
 	router.GET("/r/:hash", shortLinkHandler.GetShortLink)
+	router.GET("/health", shortLinkHandler.GetHealth)
 
 	v1 := router.Group("/api/v1")
 	v1.POST("/links", shortLinkHandler.CreateShortLink)
