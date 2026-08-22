@@ -18,7 +18,16 @@ type contextKey struct{}
 const LoggerKey = "logger"
 
 func InitLogger(cfg *configs.Config) (*slog.Logger, error) {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	opts := &slog.HandlerOptions{
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Value.Kind() == slog.KindDuration {
+				return slog.String(a.Key, a.Value.Duration().String())
+			}
+			return a
+		},
+	}
+
+	log := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 
 	log.Info(
 		"Starting application",
