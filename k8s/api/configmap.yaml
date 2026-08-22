@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: short-link-config
+  namespace: short-link
+
+data:
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: postgres
+  DB_NAME: short_link
+
+  MAX_CONN: "30"
+  MIN_CONN: "10"
+
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_TTL: 24h
+
+  SERVER_PORT: "8080"
+  SERVICE_NAME: short_link_service
+  ENVIRONMENT: kubernetes
+  
+  GIN_MODE: "release"
