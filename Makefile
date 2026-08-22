@@ -51,6 +51,21 @@ k8s-pods:
 k8s-apply-namespace:
 	kubectl apply -f k8s/namespace.yaml
 
+k8s-build:
+	docker build -t short-link:local .
+
+k8s-load-image:
+	kind load docker-image short-link:local --name $(KIND_CLUSTER)
+
+k8s-deploy:
+	kubectl apply -f k8s/api/deployment.yaml
+
+k8s-deployment:
+	kubectl get deployment -n $(K8S_NAMESPACE)
+
+k8s-pods-wide:
+	kubectl get pods -n $(K8S_NAMESPACE) -o wide
+
 .PHONY: \
 	migUP \
 	migDOWN \
@@ -66,4 +81,9 @@ k8s-apply-namespace:
 	k8s-delete \
 	k8s-status \
 	k8s-pods \
-	k8s-apply-namespace
+	k8s-apply-namespace \
+	k8s-build \
+	k8s-load-image \
+	k8s-deploy \
+	k8s-deployment \
+	k8s-pods-wide
