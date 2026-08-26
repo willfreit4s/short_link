@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: short-link
   namespace: short-link
+  labels:
+    app: short-link
 spec:
   type: ClusterIP
   selector:
