@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run unit tests with coverage
+        run: make test-coverage
+
+      - name: Show coverage summary
+        run: go tool cover -func=coverage.out
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage.html
+
+      - name: Comment PR with coverage summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            let summary = 'No coverage summary available.';
+            const outPath = path.join(process.cwd(), 'coverage.out');
+
+            if (fs.existsSync(outPath)) {
+              const lines = fs.readFileSync(outPath, 'utf8').split('\n');
+              const lastLine = lines.filter(Boolean).at(-1) || '';
+              if (lastLine.startsWith('total:')) {
+                summary = lastLine;
+              }
+            }
+
+            const body = [
+              '## Test Coverage Summary',
+              '',
+              `- Coverage: ${summary}`,
+              '',
+              '- Unit tests executed successfully.',
+              '- HTML artifact uploaded for inspection.',
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify Docker is available
+        run: docker --version
+
+      - name: Run integration tests
+        run: make test-integration
