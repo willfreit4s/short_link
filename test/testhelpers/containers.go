@@ -41,7 +41,7 @@ func SetupIntegrationDependencies(t *testing.T) (*pgxpool.Pool, *redisclient.Cli
 
 	pgHost, err := postgresContainer.Host(ctx)
 	require.NoError(t, err)
-	pgPort, err := postgresContainer.MappedPort(ctx, "5432")
+	pgPort, err := postgresContainer.MappedPort(ctx, "5432/tcp")
 	require.NoError(t, err)
 
 	dsn := fmt.Sprintf("postgres://postgres:postgres@%s:%s/short_link?sslmode=disable", pgHost, pgPort.Port())
@@ -79,7 +79,7 @@ func SetupIntegrationDependencies(t *testing.T) (*pgxpool.Pool, *redisclient.Cli
 
 	redisHost, err := redisContainer.Host(ctx)
 	require.NoError(t, err)
-	redisPort, err := redisContainer.MappedPort(ctx, "6379")
+	redisPort, err := redisContainer.MappedPort(ctx, "6379/tcp")
 	require.NoError(t, err)
 
 	redisClient := redisclient.NewClient(&redisclient.Options{
