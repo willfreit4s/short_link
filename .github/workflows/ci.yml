@@ -57,6 +57,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
+            const { execSync } = require('child_process');
             const outPath = 'coverage.out';
 
             if (!fs.existsSync(outPath)) {
@@ -64,8 +65,8 @@ jobs:
               return;
             }
 
-            const lines = fs.readFileSync(outPath, 'utf8').split('\n');
-            const totalLine = lines.find(line => line.startsWith('total:'));
+            const funcOut = execSync(`go tool cover -func=${outPath}`, { encoding: 'utf8' });
+            const totalLine = funcOut.split('\n').find(line => line.startsWith('total:'));
 
             if (!totalLine) {
               core.info('Coverage summary not found; skipping PR comment.');
@@ -111,4 +112,4 @@ jobs:
         run: docker --version
 
       - name: Run integration tests
-        run: go test ./...
+        run: go test ./test/... -tags=integration -race -v
