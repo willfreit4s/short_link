@@ -1,0 +1,1144 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>server: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/willfreit4s/short_link/cmd/server/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/willfreit4s/short_link/configs/config.go (0.0%)</option>
+				
+				<option value="file2">github.com/willfreit4s/short_link/internal/bootstrap/router.go (0.0%)</option>
+				
+				<option value="file3">github.com/willfreit4s/short_link/internal/db/db.go (0.0%)</option>
+				
+				<option value="file4">github.com/willfreit4s/short_link/internal/db/query.sql.go (0.0%)</option>
+				
+				<option value="file5">github.com/willfreit4s/short_link/internal/entity/short_link.go (100.0%)</option>
+				
+				<option value="file6">github.com/willfreit4s/short_link/internal/handler/short_link.go (96.2%)</option>
+				
+				<option value="file7">github.com/willfreit4s/short_link/internal/repository/postgres/short_link.go (0.0%)</option>
+				
+				<option value="file8">github.com/willfreit4s/short_link/internal/repository/postgres/transaction.go (0.0%)</option>
+				
+				<option value="file9">github.com/willfreit4s/short_link/internal/repository/redis/short_link.go (0.0%)</option>
+				
+				<option value="file10">github.com/willfreit4s/short_link/internal/usecase/short_link.go (96.8%)</option>
+				
+				<option value="file11">github.com/willfreit4s/short_link/pkg/database/postgres.go (0.0%)</option>
+				
+				<option value="file12">github.com/willfreit4s/short_link/pkg/database/redis.go (0.0%)</option>
+				
+				<option value="file13">github.com/willfreit4s/short_link/pkg/entity/nanoid.go (0.0%)</option>
+				
+				<option value="file14">github.com/willfreit4s/short_link/pkg/logger/logger.go (0.0%)</option>
+				
+				<option value="file15">github.com/willfreit4s/short_link/pkg/metrics/metrics.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+        "os"
+        "os/signal"
+        "syscall"
+        "time"
+
+        "github.com/willfreit4s/short_link/configs"
+        "github.com/willfreit4s/short_link/internal/bootstrap"
+        "github.com/willfreit4s/short_link/pkg/database"
+        "github.com/willfreit4s/short_link/pkg/logger"
+        "github.com/willfreit4s/short_link/pkg/metrics"
+)
+
+func main() <span class="cov0" title="0">{
+        cfg := configs.LoadConfig()
+
+        log, err := logger.InitLogger(cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+
+        <span class="cov0" title="0">metrics.Register()
+
+        db, err := database.InitDatabase(cfg, log)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error("database init", "err", err)
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+
+        redisConn, err := database.InitRedis(cfg, log)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error("redis init", "err", err)
+        }</span>
+        <span class="cov0" title="0">defer redisConn.Close()
+
+        router := bootstrap.NewRouter(log, db, redisConn, cfg.RedisTTL)
+
+        srv := &amp;http.Server{
+                Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
+                Handler: router,
+        }
+
+        go func() </span><span class="cov0" title="0">{
+                if err := srv.ListenAndServe(); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        log.Error("listen", "err", err)
+                }</span>
+        }()
+
+        <span class="cov0" title="0">quit := make(chan os.Signal, 1)
+        signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+        &lt;-quit
+        log.Info("Shutting down server...")
+
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        if err := srv.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Error("Server Shutdown", "err", err)
+        }</span>
+        <span class="cov0" title="0">log.Info("Server exiting")</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// Package configs provides configuration loading and management for the application.
+package configs
+
+import (
+        "strings"
+        "time"
+
+        "github.com/spf13/viper"
+)
+
+type config struct {
+        // Database configuration
+        DBHost  string
+        DBPort  string
+        DBUser  string
+        DBPass  string
+        DBName  string
+        MaxConn int
+        MinConn int
+
+        // Redis configuration
+        RedisHost string
+        RedisPort string
+        RedisPass string
+        RedisDB   int
+        RedisTTL  time.Duration
+
+        // Server configuration
+        ServerPort  int
+        ServiceName string
+        Environment string
+}
+
+type Config = config
+
+var Instance *Config
+
+func LoadConfig() *config <span class="cov0" title="0">{
+        v := viper.New()
+
+        v.SetDefault("DB_HOST", "localhost")
+        v.SetDefault("DB_PORT", "5432")
+        v.SetDefault("DB_USER", "postgres")
+        v.SetDefault("DB_PASS", "postgres")
+        v.SetDefault("DB_NAME", "short_link")
+        v.SetDefault("MAX_CONN", 30)
+        v.SetDefault("MIN_CONN", 10)
+        v.SetDefault("REDIS_HOST", "localhost")
+        v.SetDefault("REDIS_PORT", "6379")
+        v.SetDefault("REDIS_PASS", "wsbmrc8PH18AIjID")
+        v.SetDefault("REDIS_DB", 0)
+        v.SetDefault("REDIS_TTL", "24h")
+        v.SetDefault("SERVER_PORT", 8080)
+        v.SetDefault("SERVICE_NAME", "short_link_service")
+        v.SetDefault("ENVIRONMENT", "local")
+
+        v.SetConfigFile(".env")
+        v.SetConfigType("env")
+
+        v.AutomaticEnv()
+        v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+        Instance = &amp;Config{
+                DBHost:      v.GetString("DB_HOST"),
+                DBPort:      v.GetString("DB_PORT"),
+                DBUser:      v.GetString("DB_USER"),
+                DBPass:      v.GetString("DB_PASS"),
+                DBName:      v.GetString("DB_NAME"),
+                MaxConn:     v.GetInt("MAX_CONN"),
+                MinConn:     v.GetInt("MIN_CONN"),
+                RedisHost:   v.GetString("REDIS_HOST"),
+                RedisPort:   v.GetString("REDIS_PORT"),
+                RedisPass:   v.GetString("REDIS_PASS"),
+                RedisDB:     v.GetInt("REDIS_DB"),
+                RedisTTL:    v.GetDuration("REDIS_TTL"),
+                ServerPort:  v.GetInt("SERVER_PORT"),
+                ServiceName: v.GetString("SERVICE_NAME"),
+                Environment: v.GetString("ENVIRONMENT"),
+        }
+
+        return Instance
+}</span>
+
+func (c *config) GetEnv() string <span class="cov0" title="0">{
+        return c.Environment
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package bootstrap
+
+import (
+        "log/slog"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/prometheus/client_golang/prometheus/promhttp"
+        redisclient "github.com/redis/go-redis/v9"
+        "github.com/willfreit4s/short_link/internal/handler"
+        repositorypostgres "github.com/willfreit4s/short_link/internal/repository/postgres"
+        repositoryredis "github.com/willfreit4s/short_link/internal/repository/redis"
+        "github.com/willfreit4s/short_link/internal/usecase"
+        "github.com/willfreit4s/short_link/pkg/logger"
+        "github.com/willfreit4s/short_link/pkg/metrics"
+)
+
+func NewRouter(log *slog.Logger, conn *pgxpool.Pool, redisConn *redisclient.Client, redisTTL time.Duration) *gin.Engine <span class="cov0" title="0">{
+        shortLinkRepository := repositorypostgres.NewShortLinkRepository(conn)
+        shortLinkCache := repositoryredis.NewShortLinkCache(redisConn, redisTTL)
+        shortLinkUseCase := usecase.NewShortLinkUseCase(shortLinkRepository, shortLinkCache)
+        shortLinkHandler := handler.NewShortLinkHandler(shortLinkUseCase)
+
+        router := gin.New()
+        router.Use(logger.RequestIDMiddleware())
+        router.Use(logger.SlogMiddleware(log))
+        router.Use(metrics.Middleware())
+        router.Use(gin.Recovery())
+
+        router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+        router.GET("/r/:hash", shortLinkHandler.GetShortLink)
+        router.GET("/health", shortLinkHandler.GetHealth)
+
+        v1 := router.Group("/api/v1")
+        v1.POST("/links", shortLinkHandler.CreateShortLink)
+
+        return router
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.31.1
+
+package db
+
+import (
+        "context"
+
+        "github.com/jackc/pgx/v5"
+        "github.com/jackc/pgx/v5/pgconn"
+)
+
+type DBTX interface {
+        Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+        Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+        QueryRow(context.Context, string, ...interface{}) pgx.Row
+}
+
+func New(db DBTX) *Queries <span class="cov0" title="0">{
+        return &amp;Queries{db: db}
+}</span>
+
+type Queries struct {
+        db DBTX
+}
+
+func (q *Queries) WithTx(tx pgx.Tx) *Queries <span class="cov0" title="0">{
+        return &amp;Queries{
+                db: tx,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.31.1
+// source: query.sql
+
+package db
+
+import (
+        "context"
+)
+
+const createShortLink = `-- name: CreateShortLink :one
+INSERT INTO links (id, original_url, created_at)
+VALUES ($1, $2, NOW())
+RETURNING id, original_url, created_at
+`
+
+type CreateShortLinkParams struct {
+        ID          string
+        OriginalUrl string
+}
+
+func (q *Queries) CreateShortLink(ctx context.Context, arg CreateShortLinkParams) (Link, error) <span class="cov0" title="0">{
+        row := q.db.QueryRow(ctx, createShortLink, arg.ID, arg.OriginalUrl)
+        var i Link
+        err := row.Scan(&amp;i.ID, &amp;i.OriginalUrl, &amp;i.CreatedAt)
+        return i, err
+}</span>
+
+const getShortLink = `-- name: GetShortLink :one
+SELECT id, original_url, created_at
+FROM links
+WHERE id = $1
+`
+
+func (q *Queries) GetShortLink(ctx context.Context, id string) (Link, error) <span class="cov0" title="0">{
+        row := q.db.QueryRow(ctx, getShortLink, id)
+        var i Link
+        err := row.Scan(&amp;i.ID, &amp;i.OriginalUrl, &amp;i.CreatedAt)
+        return i, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">// Package entity defines the ShortLink entity and its validation logic.
+package entity
+
+import (
+        "errors"
+        "strings"
+        "time"
+
+        "github.com/willfreit4s/short_link/pkg/entity"
+)
+
+var (
+        ErrIDIsRequired          = errors.New("ID is required")
+        ErrOriginalURLIsRequired = errors.New("OriginalURL is required")
+)
+
+type ShortLink struct {
+        ID          entity.NanoID `json:"id"`
+        OriginalURL string        `json:"original_url"`
+        CreatedAt   time.Time     `json:"created_at"`
+}
+
+func NewShortLink(originalURL string) (*ShortLink, error) <span class="cov8" title="1">{
+        shortLink := &amp;ShortLink{
+                ID:          entity.NewNanoID(),
+                OriginalURL: normalizeOriginalURL(originalURL),
+                CreatedAt:   time.Now(),
+        }
+
+        if err := shortLink.Validate(); err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return shortLink, nil</span>
+}
+
+func (s *ShortLink) Validate() error <span class="cov8" title="1">{
+        if s.ID == "" </span><span class="cov8" title="1">{
+                return ErrIDIsRequired
+        }</span>
+        <span class="cov8" title="1">if s.OriginalURL == "" </span><span class="cov8" title="1">{
+                return ErrOriginalURLIsRequired
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func normalizeOriginalURL(originalURL string) string <span class="cov8" title="1">{
+        originalURL = strings.TrimSpace(originalURL)
+
+        if originalURL == "" </span><span class="cov8" title="1">{
+                return originalURL
+        }</span>
+
+        <span class="cov8" title="1">if strings.HasPrefix(originalURL, "http://") || strings.HasPrefix(originalURL, "https://") </span><span class="cov8" title="1">{
+                return originalURL
+        }</span>
+
+        <span class="cov8" title="1">return "https://" + originalURL</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">// Package handler defines the HTTP handlers for managing short links.
+package handler
+
+import (
+        "errors"
+        "fmt"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "github.com/willfreit4s/short_link/configs"
+        "github.com/willfreit4s/short_link/internal/usecase"
+        usecasedto "github.com/willfreit4s/short_link/internal/usecase/dto"
+)
+
+type ShortLinkResponse struct {
+        ShortURL string `json:"short_url"`
+}
+
+type ShortLinkRequest struct {
+        URL string `json:"url"`
+}
+
+type ShortLinkHandler struct {
+        usecase usecase.ShortLinkUseCase
+}
+
+func NewShortLinkHandler(usecase usecase.ShortLinkUseCase) *ShortLinkHandler <span class="cov8" title="1">{
+        return &amp;ShortLinkHandler{
+                usecase: usecase,
+        }
+}</span>
+
+func (h *ShortLinkHandler) GetHealth(c *gin.Context) <span class="cov8" title="1">{
+        c.JSON(http.StatusOK, gin.H{
+                "status": "ok",
+        })
+}</span>
+
+func (h *ShortLinkHandler) CreateShortLink(c *gin.Context) <span class="cov8" title="1">{
+        var req ShortLinkRequest
+
+        if err := c.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, gin.H{
+                        "error":   "Invalid request payload",
+                        "message": err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">input := usecasedto.CreateShortLinkInput{
+                OriginalURL: req.URL,
+        }
+
+        shortLink, err := h.usecase.CreateShortLink(c.Request.Context(), input)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, gin.H{
+                        "error":   "Failed to create short link",
+                        "message": err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">var httpOrHttps string = "http"
+        env := configs.Instance.GetEnv()
+
+        if env != "local" </span><span class="cov0" title="0">{
+                httpOrHttps = "https"
+        }</span>
+
+        <span class="cov8" title="1">shortLinkResponse := ShortLinkResponse{
+                ShortURL: fmt.Sprintf("%s://%s/r/%s", httpOrHttps, c.Request.Host, shortLink.Hash),
+        }
+
+        c.JSON(http.StatusCreated, shortLinkResponse)</span>
+}
+
+func (h *ShortLinkHandler) GetShortLink(c *gin.Context) <span class="cov8" title="1">{
+        hash := c.Param("hash")
+
+        shortLink, err := h.usecase.GetShortLink(c.Request.Context(), usecasedto.GetShortLinkInput{Hash: hash})
+        if err != nil </span><span class="cov8" title="1">{
+                if errors.Is(err, usecase.ErrShortLinkNotFound) </span><span class="cov8" title="1">{
+                        c.JSON(http.StatusNotFound, gin.H{
+                                "error": "short link not found",
+                        })
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.JSON(http.StatusNotFound, gin.H{
+                        "error": err.Error(),
+                })
+                return</span>
+        }
+
+        <span class="cov8" title="1">c.Redirect(http.StatusFound, shortLink.OriginalURL)</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package postgres
+
+import (
+        "context"
+        "errors"
+
+        "github.com/jackc/pgx/v5"
+        db "github.com/willfreit4s/short_link/internal/db"
+        "github.com/willfreit4s/short_link/internal/entity"
+        "github.com/willfreit4s/short_link/internal/ports"
+        pkgentity "github.com/willfreit4s/short_link/pkg/entity"
+)
+
+type shortLinkRepository struct {
+        executor db.DBTX
+}
+
+func NewShortLinkRepository(executor db.DBTX) ports.ShortLinkRepository <span class="cov0" title="0">{
+        return &amp;shortLinkRepository{
+                executor: executor,
+        }
+}</span>
+
+func (r *shortLinkRepository) CreateShortLink(ctx context.Context, shortLink *entity.ShortLink) (*entity.ShortLink, error) <span class="cov0" title="0">{
+        createdShortLink, err := r.queries(ctx).CreateShortLink(ctx, db.CreateShortLinkParams{
+                ID:          shortLink.ID.String(),
+                OriginalUrl: shortLink.OriginalURL,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return mapLink(createdShortLink), nil</span>
+}
+
+func (r *shortLinkRepository) GetShortLink(ctx context.Context, id string) (*entity.ShortLink, error) <span class="cov0" title="0">{
+        link, err := r.queries(ctx).GetShortLink(ctx, id)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, pgx.ErrNoRows) </span><span class="cov0" title="0">{
+                        return nil, nil
+                }</span>
+
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return mapLink(link), nil</span>
+}
+
+func (r *shortLinkRepository) queries(ctx context.Context) *db.Queries <span class="cov0" title="0">{
+        return db.New(executorFromContext(ctx, r.executor))
+}</span>
+
+func mapLink(link db.Link) *entity.ShortLink <span class="cov0" title="0">{
+        return &amp;entity.ShortLink{
+                ID:          pkgentity.NanoID(link.ID),
+                OriginalURL: link.OriginalUrl,
+                CreatedAt:   link.CreatedAt.Time,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package postgres
+
+import (
+        "context"
+
+        "github.com/jackc/pgx/v5"
+        "github.com/jackc/pgx/v5/pgxpool"
+        db "github.com/willfreit4s/short_link/internal/db"
+        "github.com/willfreit4s/short_link/internal/ports"
+)
+
+type txContextKey struct{}
+
+type transactionManager struct {
+        pool *pgxpool.Pool
+}
+
+func NewTransactionManager(pool *pgxpool.Pool) ports.TransactionManager <span class="cov0" title="0">{
+        return &amp;transactionManager{pool: pool}
+}</span>
+
+func (tm *transactionManager) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error <span class="cov0" title="0">{
+        tx, err := tm.pool.Begin(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">txCtx := context.WithValue(ctx, txContextKey{}, tx)
+
+        if err := fn(txCtx); err != nil </span><span class="cov0" title="0">{
+                _ = tx.Rollback(ctx)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">if err := tx.Commit(ctx); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func executorFromContext(ctx context.Context, fallback db.DBTX) db.DBTX <span class="cov0" title="0">{
+        if tx, ok := ctx.Value(txContextKey{}).(pgx.Tx); ok </span><span class="cov0" title="0">{
+                return tx
+        }</span>
+
+        <span class="cov0" title="0">return fallback</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package redis
+
+import (
+        "context"
+        "errors"
+        "time"
+
+        redisclient "github.com/redis/go-redis/v9"
+        "github.com/willfreit4s/short_link/internal/ports"
+)
+
+const shortLinkCacheKeyPrefix = "shortlink:"
+
+type shortLinkCache struct {
+        client *redisclient.Client
+        ttl    time.Duration
+}
+
+func NewShortLinkCache(client *redisclient.Client, ttl time.Duration) ports.ShortLinkCache <span class="cov0" title="0">{
+        return &amp;shortLinkCache{client: client, ttl: ttl}
+}</span>
+
+func (c *shortLinkCache) Get(ctx context.Context, hash string) (string, bool, error) <span class="cov0" title="0">{
+        value, err := c.client.Get(ctx, c.key(hash)).Result()
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, redisclient.Nil) </span><span class="cov0" title="0">{
+                        return "", false, nil
+                }</span>
+
+                <span class="cov0" title="0">return "", false, err</span>
+        }
+
+        <span class="cov0" title="0">return value, true, nil</span>
+}
+
+func (c *shortLinkCache) Set(ctx context.Context, hash string, originalURL string) error <span class="cov0" title="0">{
+        ttl := c.ttl
+        if ttl &lt;= 0 </span><span class="cov0" title="0">{
+                ttl = 24 * time.Hour
+        }</span>
+
+        <span class="cov0" title="0">return c.client.Set(ctx, c.key(hash), originalURL, ttl).Err()</span>
+}
+
+func (c *shortLinkCache) Delete(ctx context.Context, hash string) error <span class="cov0" title="0">{
+        return c.client.Del(ctx, c.key(hash)).Err()
+}</span>
+
+func (c *shortLinkCache) key(hash string) string <span class="cov0" title="0">{
+        return shortLinkCacheKeyPrefix + hash
+}</pre>
+		
+		<pre class="file" id="file10" style="display: none">// Package usecase defines the use cases for managing short links.
+package usecase
+
+import (
+        "context"
+        "errors"
+
+        "github.com/willfreit4s/short_link/internal/entity"
+        "github.com/willfreit4s/short_link/internal/ports"
+        usecasedto "github.com/willfreit4s/short_link/internal/usecase/dto"
+        "github.com/willfreit4s/short_link/pkg/logger"
+)
+
+var ErrShortLinkNotFound = errors.New("short link not found")
+
+type ShortLinkUseCase interface {
+        CreateShortLink(ctx context.Context, input usecasedto.CreateShortLinkInput) (usecasedto.CreateShortLinkOutput, error)
+        GetShortLink(ctx context.Context, input usecasedto.GetShortLinkInput) (usecasedto.GetShortLinkOutput, error)
+}
+
+type shortLinkUseCase struct {
+        repository ports.ShortLinkRepository
+        cache      ports.ShortLinkCache
+}
+
+func NewShortLinkUseCase(repository ports.ShortLinkRepository, cache ports.ShortLinkCache) ShortLinkUseCase <span class="cov8" title="1">{
+        return &amp;shortLinkUseCase{
+                repository: repository,
+                cache:      cache,
+        }
+}</span>
+
+func (uc *shortLinkUseCase) CreateShortLink(ctx context.Context, input usecasedto.CreateShortLinkInput) (usecasedto.CreateShortLinkOutput, error) <span class="cov8" title="1">{
+        log := logger.FromContext(ctx)
+
+        shortLink, err := entity.NewShortLink(input.OriginalURL)
+        if err != nil </span><span class="cov8" title="1">{
+                log.Error("failed to create short link entity", "error", err)
+                return usecasedto.CreateShortLinkOutput{}, err
+        }</span>
+
+        <span class="cov8" title="1">createdShortLink, err := uc.repository.CreateShortLink(ctx, shortLink)
+        if err != nil </span><span class="cov8" title="1">{
+                log.Error("failed to create short link in repository", "error", err)
+                return usecasedto.CreateShortLinkOutput{}, err
+        }</span>
+        <span class="cov8" title="1">if createdShortLink == nil </span><span class="cov8" title="1">{
+                log.Error("short link repository returned nil short link")
+                return usecasedto.CreateShortLinkOutput{}, errors.New("short link repository returned nil short link")
+        }</span>
+
+        <span class="cov8" title="1">if err := uc.cache.Set(ctx, createdShortLink.ID.String(), createdShortLink.OriginalURL); err != nil </span><span class="cov8" title="1">{
+                log.Error("failed to cache created short link", "error", err, "hash", createdShortLink.ID.String())
+        }</span>
+
+        <span class="cov8" title="1">return usecasedto.CreateShortLinkOutput{
+                ID:          createdShortLink.ID.String(),
+                Hash:        createdShortLink.ID.String(),
+                OriginalURL: createdShortLink.OriginalURL,
+        }, nil</span>
+}
+
+func (uc *shortLinkUseCase) GetShortLink(ctx context.Context, input usecasedto.GetShortLinkInput) (usecasedto.GetShortLinkOutput, error) <span class="cov8" title="1">{
+        log := logger.FromContext(ctx)
+
+        if cachedURL, found, err := uc.cache.Get(ctx, input.Hash); err != nil </span><span class="cov0" title="0">{
+                log.Error("failed to get short link from cache", "error", err, "hash", input.Hash)
+        }</span> else<span class="cov8" title="1"> if found </span><span class="cov8" title="1">{
+                return usecasedto.GetShortLinkOutput{OriginalURL: cachedURL}, nil
+        }</span>
+
+        <span class="cov8" title="1">shortLink, err := uc.repository.GetShortLink(ctx, input.Hash)
+        if err != nil </span><span class="cov8" title="1">{
+                log.Error("failed to get short link from repository", "error", err)
+                return usecasedto.GetShortLinkOutput{}, err
+        }</span>
+        <span class="cov8" title="1">if shortLink == nil </span><span class="cov8" title="1">{
+                log.Error("short link not found", "hash", input.Hash)
+                return usecasedto.GetShortLinkOutput{}, ErrShortLinkNotFound
+        }</span>
+
+        <span class="cov8" title="1">if err := uc.cache.Set(ctx, input.Hash, shortLink.OriginalURL); err != nil </span><span class="cov8" title="1">{
+                log.Error("failed to update short link cache after repository hit", "error", err, "hash", input.Hash)
+        }</span>
+
+        <span class="cov8" title="1">return usecasedto.GetShortLinkOutput{OriginalURL: shortLink.OriginalURL}, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">// Package database provides functionality for initializing and managing a PostgreSQL database connection pool.
+package database
+
+import (
+        "context"
+        "fmt"
+        "log/slog"
+        "time"
+
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/willfreit4s/short_link/configs"
+)
+
+func InitDatabase(cfg *configs.Config, log *slog.Logger) (*pgxpool.Pool, error) <span class="cov0" title="0">{
+        log.Info("initializing database pool")
+        log.Info("Postgres config", "max_conn ", cfg.MaxConn, ", min_conn ", cfg.MinConn)
+
+        dsn := fmt.Sprintf(
+                "postgres://%s:%s@%s:%s/%s?sslmode=disable",
+                cfg.DBUser,
+                cfg.DBPass,
+                cfg.DBHost,
+                cfg.DBPort,
+                cfg.DBName,
+        )
+
+        config, err := pgxpool.ParseConfig(dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">config.MaxConns = int32(cfg.MaxConn)
+        config.MinConns = int32(cfg.MinConn)
+        config.MaxConnLifetime = 30 * time.Minute
+        config.MaxConnIdleTime = 5 * time.Minute
+
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        pool, err := pgxpool.NewWithConfig(ctx, config)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error("database pool init failed", "err", err)
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">if err := pool.Ping(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Error("database ping failed", "err", err)
+                pool.Close()
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">log.Info("database pool initialized")
+
+        return pool, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package database
+
+import (
+        "context"
+        "fmt"
+        "log/slog"
+        "time"
+
+        redisclient "github.com/redis/go-redis/v9"
+        "github.com/willfreit4s/short_link/configs"
+)
+
+func InitRedis(cfg *configs.Config, log *slog.Logger) (*redisclient.Client, error) <span class="cov0" title="0">{
+        log.Info("initializing redis client")
+
+        client := redisclient.NewClient(&amp;redisclient.Options{
+                Addr:     fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
+                Password: cfg.RedisPass,
+                DB:       cfg.RedisDB,
+        })
+
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        if err := client.Ping(ctx).Err(); err != nil </span><span class="cov0" title="0">{
+                log.Error("redis ping failed", "err", err)
+                return client, err
+        }</span>
+
+        <span class="cov0" title="0">log.Info("redis client initialized")
+
+        return client, nil</span>
+}</pre>
+		
+		<pre class="file" id="file13" style="display: none">// Package entity defines the ID type and its validation logic.
+package entity
+
+import (
+        "errors"
+        "regexp"
+
+        "github.com/jaevor/go-nanoid"
+)
+
+const IDLength = 10
+const Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-"
+
+var generateNanoID func() string
+var idRegex = regexp.MustCompile(`^[0-9A-Za-z_-]{10}$`)
+
+var ErrInvalidID = errors.New("identifier with an invalid format or size")
+
+type NanoID string
+
+func init() <span class="cov0" title="0">{
+        var err error
+        generateNanoID, err = nanoid.CustomASCII(Alphabet, IDLength)
+        if err != nil </span><span class="cov0" title="0">{
+                panic("failure to initialize NanoID generator: " + err.Error())</span>
+        }
+}
+
+func (id NanoID) String() string <span class="cov0" title="0">{
+        return string(id)
+}</span>
+
+func NewNanoID() NanoID <span class="cov0" title="0">{
+        return NanoID(generateNanoID())
+}</span>
+
+func ParseID(raw string) (NanoID, error) <span class="cov0" title="0">{
+        if len(raw) != IDLength </span><span class="cov0" title="0">{
+                return "", ErrInvalidID
+        }</span>
+
+        <span class="cov0" title="0">if !idRegex.MatchString(raw) </span><span class="cov0" title="0">{
+                return "", ErrInvalidID
+        }</span>
+
+        <span class="cov0" title="0">return NanoID(raw), nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">// Package logger defines middleware for logging requests in Gin
+package logger
+
+import (
+        "context"
+        "log/slog"
+        "os"
+        "time"
+
+        "github.com/google/uuid"
+        "github.com/willfreit4s/short_link/configs"
+
+        "github.com/gin-gonic/gin"
+)
+
+type contextKey struct{}
+
+const LoggerKey = "logger"
+
+func InitLogger(cfg *configs.Config) (*slog.Logger, error) <span class="cov0" title="0">{
+        opts := &amp;slog.HandlerOptions{
+                ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr </span><span class="cov0" title="0">{
+                        if a.Value.Kind() == slog.KindDuration </span><span class="cov0" title="0">{
+                                return slog.String(a.Key, a.Value.Duration().String())
+                        }</span>
+                        <span class="cov0" title="0">return a</span>
+                },
+        }
+
+        <span class="cov0" title="0">log := slog.New(slog.NewJSONHandler(os.Stdout, opts))
+
+        log.Info(
+                "Starting application",
+                "service_name", cfg.ServiceName,
+                "environment", cfg.Environment,
+                "server_port", cfg.ServerPort,
+        )
+
+        return log, nil</span>
+}
+
+func WithContext(ctx context.Context, logger *slog.Logger) context.Context <span class="cov0" title="0">{
+        return context.WithValue(ctx, contextKey{}, logger)
+}</span>
+
+func RequestIDMiddleware() gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                requestID := c.GetHeader("X-Request-ID")
+                if requestID == "" </span><span class="cov0" title="0">{
+                        requestID = uuid.New().String()
+                }</span>
+                <span class="cov0" title="0">c.Set("request_id", requestID)
+                c.Header("X-Request-ID", requestID)
+                c.Next()</span>
+        }
+}
+
+func SlogMiddleware(logger *slog.Logger) gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                start := time.Now()
+                requestID, _ := c.Get("request_id")
+
+                reqLogger := logger.With(
+                        slog.String("path", c.Request.URL.Path),
+                        slog.String("method", c.Request.Method),
+                        slog.String("request_id", requestID.(string)),
+                )
+
+                c.Request = c.Request.WithContext(WithContext(c.Request.Context(), reqLogger))
+                c.Set(LoggerKey, reqLogger)
+
+                c.Next()
+
+                reqLogger.Info("request",
+                        slog.String("method", c.Request.Method),
+                        slog.String("path", c.Request.URL.Path),
+                        slog.Int("status", c.Writer.Status()),
+                        slog.Duration("latency", time.Since(start)),
+                        slog.String("agent", c.Request.UserAgent()),
+                )
+        }</span>
+}
+
+func FromContext(ctx context.Context) *slog.Logger <span class="cov0" title="0">{
+        if ctx == nil </span><span class="cov0" title="0">{
+                return slog.Default()
+        }</span>
+
+        <span class="cov0" title="0">if logger, ok := ctx.Value(contextKey{}).(*slog.Logger); ok &amp;&amp; logger != nil </span><span class="cov0" title="0">{
+                return logger
+        }</span>
+
+        <span class="cov0" title="0">return slog.Default()</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package metrics
+
+import (
+        "strconv"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "github.com/prometheus/client_golang/prometheus"
+)
+
+var (
+        HTTPRequestsTotal = prometheus.NewCounterVec(
+                prometheus.CounterOpts{
+                        Name: "http_requests_total",
+                        Help: "Total number of HTTP requests.",
+                },
+                []string{
+                        "method",
+                        "route",
+                        "status",
+                },
+        )
+
+        HTTPRequestDuration = prometheus.NewHistogramVec(
+                prometheus.HistogramOpts{
+                        Name:    "http_request_duration_seconds",
+                        Help:    "HTTP request duration in seconds.",
+                        Buckets: prometheus.DefBuckets,
+                },
+                []string{
+                        "method",
+                        "route",
+                },
+        )
+
+        HTTPRequestsInFlight = prometheus.NewGauge(
+                prometheus.GaugeOpts{
+                        Name: "http_requests_in_flight",
+                        Help: "Current number of HTTP requests being processed.",
+                },
+        )
+)
+
+func Register() <span class="cov0" title="0">{
+        prometheus.MustRegister(
+                HTTPRequestsTotal,
+                HTTPRequestDuration,
+                HTTPRequestsInFlight,
+        )
+}</span>
+
+func Middleware() gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                if c.Request.URL.Path == "/metrics" </span><span class="cov0" title="0">{
+                        c.Next()
+                        return
+                }</span>
+
+                <span class="cov0" title="0">start := time.Now()
+
+                HTTPRequestsInFlight.Inc()
+
+                c.Next()
+
+                duration := time.Since(start).Seconds()
+
+                route := c.FullPath()
+
+                if route == "" </span><span class="cov0" title="0">{
+                        route = "unknown"
+                }</span>
+
+                <span class="cov0" title="0">method := c.Request.Method
+                status := strconv.Itoa(c.Writer.Status())
+
+                HTTPRequestsTotal.WithLabelValues(
+                        method,
+                        route,
+                        status,
+                ).Inc()
+
+                HTTPRequestDuration.WithLabelValues(
+                        method,
+                        route,
+                ).Observe(duration)
+
+                HTTPRequestsInFlight.Dec()</span>
+        }
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
