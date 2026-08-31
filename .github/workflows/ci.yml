@@ -50,47 +50,6 @@ jobs:
             coverage.html
           if-no-files-found: ignore
 
-      - name: Comment PR with coverage summary
-        if: github.event_name == 'pull_request' && hashFiles('coverage.out') != ''
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const { execSync } = require('child_process');
-            const outPath = 'coverage.out';
-
-            if (!fs.existsSync(outPath)) {
-              core.info('Coverage file not found; skipping PR comment.');
-              return;
-            }
-
-            const funcOut = execSync(`go tool cover -func=${outPath}`, { encoding: 'utf8' });
-            const totalLine = funcOut.split('\n').find(line => line.startsWith('total:'));
-
-            if (!totalLine) {
-              core.info('Coverage summary not found; skipping PR comment.');
-              return;
-            }
-
-            const body = [
-              '## Test Coverage Summary',
-              '',
-              `- Coverage: ${totalLine}`,
-              '',
-              '- Unit tests executed successfully.',
-              '- HTML artifact uploaded for inspection.',
-            ].join('\n');
-
-            const { owner, repo } = context.repo;
-            const issue_number = context.issue.number;
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body,
-            });
 
   integration-tests:
     name: Integration tests
