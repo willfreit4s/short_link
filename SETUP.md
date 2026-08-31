@@ -65,9 +65,6 @@ kubectl apply -f k8s/api/secret.yaml
 This project offers two ways to run PostgreSQL:
 
 - `k8s/postgres/statefulset.yaml`: recommended production-like option with a 5 GiB PVC.
-- `k8s/postgres/deployment.yaml`: simple disposable option using `emptyDir`.
-
-Use only one of them. Do not apply both together because they both create a resource named `postgres`.
 
 Recommended environment:
 
@@ -76,13 +73,6 @@ kubectl apply -f k8s/postgres/service.yaml
 kubectl apply -f k8s/postgres/statefulset.yaml
 kubectl rollout status statefulset/postgres -n short-link --timeout=180s
 kubectl get svc postgres -n short-link
-```
-
-For disposable environment:
-
-```bash
-kubectl apply -f k8s/postgres/deployment.yaml
-kubectl rollout status deployment/postgres -n short-link --timeout=180s
 ```
 
 The Service must exist before the API so that the hostname `postgres` resolves correctly inside the cluster.
