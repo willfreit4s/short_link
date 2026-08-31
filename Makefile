@@ -31,6 +31,22 @@ docker-logs:
 docker-logs-api:
 	docker compose -f docker/docker-compose.yaml logs -f api
 
+## Runs only unit tests (which are fast and have no external dependencies)
+test-unit:
+	go test ./... -short -race -cover
+
+## Runs only integration tests (uses testcontainers, requires Docker)
+test-integration:
+	go test ./test/... -tags=integration -race -v
+
+## Runs the entire suite of tests (unit and integration)
+test-all: test-unit test-integration
+
+## Generate a coverage report (unit tests only)
+test-coverage:
+	go test ./... -short -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+
 # Kubernetes
 
 K8S_NAMESPACE=short-link
@@ -77,6 +93,10 @@ k8s-pods-wide:
 	docker-down-v \
 	docker-logs \
 	docker-logs-api \
+	test-unit \
+	test-integration \
+	test-all \
+	test-coverage \
 	k8s-create \
 	k8s-delete \
 	k8s-status \
