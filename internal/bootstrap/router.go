@@ -25,8 +25,8 @@ func NewRouter(log *slog.Logger, conn *pgxpool.Pool, redisConn *redisclient.Clie
 	router := gin.New()
 	router.Use(logger.RequestIDMiddleware())
 	router.Use(logger.SlogMiddleware(log))
-	router.Use(gin.Recovery())
 	router.Use(metrics.Middleware())
+	router.Use(gin.Recovery())
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
