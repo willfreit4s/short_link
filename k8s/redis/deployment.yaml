@@ -4,49 +4,45 @@ kind: Deployment
 metadata:
   name: redis
   namespace: short-link
-
 spec:
   replicas: 1
-
   selector:
     matchLabels:
       app: redis
-
   template:
     metadata:
       labels:
         app: redis
-
     spec:
       containers:
         - name: redis
-
           image: redis:8-alpine
-
           ports:
             - name: redis
               containerPort: 6379
-
           env:
             - name: REDIS_PASS
               valueFrom:
                 secretKeyRef:
                   name: short-link-secret
                   key: REDIS_PASS
-
           command:
             - redis-server
-
           args:
             - --appendonly
             - "yes"
             - --requirepass
             - "$(REDIS_PASS)"
-
           volumeMounts:
             - name: redis-data
               mountPath: /data
-
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       volumes:
         - name: redis-data
           emptyDir: {}
