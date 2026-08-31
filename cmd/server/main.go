@@ -13,6 +13,7 @@ import (
 	"github.com/willfreit4s/short_link/internal/bootstrap"
 	"github.com/willfreit4s/short_link/pkg/database"
 	"github.com/willfreit4s/short_link/pkg/logger"
+	"github.com/willfreit4s/short_link/pkg/metrics"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	metrics.Register()
 
 	db, err := database.InitDatabase(cfg, log)
 	if err != nil {

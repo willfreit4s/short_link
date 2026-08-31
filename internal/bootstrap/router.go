@@ -6,12 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	redisclient "github.com/redis/go-redis/v9"
 	"github.com/willfreit4s/short_link/internal/handler"
 	repositorypostgres "github.com/willfreit4s/short_link/internal/repository/postgres"
 	repositoryredis "github.com/willfreit4s/short_link/internal/repository/redis"
 	"github.com/willfreit4s/short_link/internal/usecase"
 	"github.com/willfreit4s/short_link/pkg/logger"
+	"github.com/willfreit4s/short_link/pkg/metrics"
 )
 
 func NewRouter(log *slog.Logger, conn *pgxpool.Pool, redisConn *redisclient.Client, redisTTL time.Duration) *gin.Engine {
@@ -23,7 +25,10 @@ func NewRouter(log *slog.Logger, conn *pgxpool.Pool, redisConn *redisclient.Clie
 	router := gin.New()
 	router.Use(logger.RequestIDMiddleware())
 	router.Use(logger.SlogMiddleware(log))
-	router.Use(gin.Recovery())
+	router.Use(metrics.Middleware())
+	router.Use(gin.Recovery())
+
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	router.GET("/r/:hash", shortLinkHandler.GetShortLink)
 	router.GET("/health", shortLinkHandler.GetHealth)
