@@ -182,7 +182,8 @@ The `TARGETS` value may remain as `unknown` for a while while Metrics Server col
 kubectl apply -f k8s/api/gatewayclass.yaml
 kubectl apply -f k8s/api/gateway.yaml
 kubectl apply -f k8s/api/httproute.yaml
-kubectl get gatewayclass,gateway,httproute -n short-link
+kubectl get gatewayclass
+kubectl get gateway,httproute -n short-link
 ```
 
 Without Envoy Gateway, these objects may be accepted by the Kubernetes API server but will not create a reachable endpoint.
