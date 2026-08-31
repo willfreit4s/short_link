@@ -1,0 +1,9 @@
+# Generated coverage artifacts
+coverage.out
+coverage.html
+coverage.*
+
+# Local environment and build output
+.DS_Store
+.env
+.env.*
